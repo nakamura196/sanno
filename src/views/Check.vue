@@ -77,7 +77,7 @@ export default {
 
             axios.put(url, result)
                 .then(response => {
-                    console.log("saved.")
+                    alert("saved.")
 
                 }).catch(error => { console.log(error); });
         },
