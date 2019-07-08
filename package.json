@@ -22,6 +22,7 @@
     "vue": "^2.6.10",
     "vue-chartjs": "^3.4.2",
     "vue-chartkick": "^0.5.1",
+    "vue-gapi": "0.0.10",
     "vue-google-charts": "^0.3.2",
     "vue-router": "^3.0.7",
     "vue2-leaflet": "^2.1.1",

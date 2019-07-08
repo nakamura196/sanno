@@ -8,29 +8,40 @@
     
                 <v-data-table :headers="headers" :items="items" hide-actions hide-headers class="elevation-1">
                     <template v-slot:items="props">
-                                  <th>{{ props.item.key }}</th>
-                                  <td class="py-2">{{ props.item.value }}</td>
+                                                      <th>{{ props.item.key }}</th>
+                                                      <td class="py-2">{{ props.item.value }}</td>
 </template>
   </v-data-table>
 
-<v-card class="mt-5 px-4 py-4">
+  <h2 class="mt-5 mb-4">Choose appropriate names (Multiple answers allowed)</h2>
 
-<h2 class="mb-4">Choose appropriate names (Multiple answers allowed)</h2>
+<template v-for="(item, index) in list">
+    <v-card class="px-4 mb-4">
+    
+        <v-card-actions>
+            <v-checkbox :key="item.title" v-model="selected" :label="item.title+' ['+item.viafId+']'" :value="item.viafId">
+            </v-checkbox>
+            <template v-if="item.references.length > 0">
+                <v-spacer></v-spacer>
+                <v-btn icon @click="item.show = !item.show">
+                    <v-icon>{{ item.show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
+                </v-btn>
+            </template>
+        </v-card-actions>
+    
+        <v-slide-y-transition>
+            <v-card-text class="pb-5" v-show="item.show">
+                <template v-for="(ref, index) in item.references">
+                                        <span>[{{index + 1}}] <a target="_blank" :href="ref">{{ref}}</a></span>
+                                        <br/>
+</template>
+          </v-card-text>
+        </v-slide-y-transition>
+      </v-card>
 
-<template v-for="(item) in list">
-    <hr class="my-4" />
-    <v-checkbox :key="item.title" v-model="selected" :label="item.title" :value="item.title">
-    </v-checkbox>
-    <template v-for="(ref, index) in item.references">
-                    <span>[{{index + 1}}] <a :href="ref">{{ref}}</a></span>
-                    <br/>
 </template>
 
-</template>
-
-    </v-card>
-
-    <v-btn class="my-5" color="primary" @click="save">Save</v-btn>
+    <v-btn color="primary" class="mb-5" @click="save">Save</v-btn>
                 
             </v-container>
         </v-content>
@@ -41,7 +52,10 @@
 <script>
 import axios from 'axios';
 
-let url = "https://api.myjson.com/bins/uo2mf"
+let separator = "|"
+let spreadsheetId = '12LdWL7-4WVfSGoPuM7Ji-yyJaXcjI3WywXzM7F48PYY'
+let sheetName = "contributeurs_viaf"
+let url = "https://nakamura196.github.io/sanno/contributeurs_viaf.json"
 
 export default {
     data: function() {
@@ -52,34 +66,75 @@ export default {
             person: "",
             selected: [],
             result: {},
-            selected: []
+            selected: [],
+            index: -1
         }
     },
     created: function() {
         let param = Object.assign({}, this.$route.query)
         this.person = param.q
-        this.list2()
+        this.getSelected()
     },
     methods: {
         save() {
 
             let selected = this.selected
-            let result = this.result
-            let viaf = result[this.person].viaf
-            for (let key in viaf) {
-                let obj = viaf[key]
-                let flg = false
-                if (selected.indexOf(key) != -1) {
-                    flg = true
-                }
-                obj.selected = flg
-            }
 
-            axios.put(url, result)
-                .then(response => {
-                    alert("saved.")
+            let row = 2 + this.index
 
-                }).catch(error => { console.log(error); });
+            this.$getGapiClient()
+                .then(gapi => {
+                    gapi.client.sheets.spreadsheets.values.update({
+                        spreadsheetId: spreadsheetId,
+                        range: sheetName + '!A' + row + ':C' + row,
+                        valueInputOption: "USER_ENTERED",
+                        resource: {
+                            values: [
+                                [this.person, selected.join(separator)]
+                            ]
+                        }
+                    }).then(
+                        response => {
+                            alert("saved.")
+                        }
+                    ).catch(error => {
+                        console.log(error);
+                        alert(error.result.error.message)
+                    });
+                })
+
+
+        },
+        getSelected() {
+
+            this.$getGapiClient()
+                .then(gapi => {
+                    gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: spreadsheetId,
+                        range: sheetName + '!A2:Z'
+                    }).then(
+                        response => {
+                            let result = response.result.values;
+                            for (let i = 0; i < result.length; i++) {
+                                let obj = result[i]
+                                let key = obj[0]
+                                if (this.person == key) {
+                                    this.index = i
+
+                                    if (obj.length >= 2 && obj[1].length > 0) {
+                                        this.selected = obj[1].split(separator)
+                                    }
+
+                                    break
+                                }
+                            }
+                            if (this.index == -1) {
+                                this.index = result.length
+                            }
+                            this.list2()
+                        }
+                    );
+                })
         },
         list2() {
 
@@ -89,9 +144,6 @@ export default {
                     let items = this.items
                     let headers = this.headers
                     let list = this.list
-
-                    let selected = []
-                    this.selected = selected
 
                     let result = response.data
 
@@ -107,16 +159,20 @@ export default {
                         items.push(item)
                     }
 
+                    let viafs = []
+
                     for (let key in result.viaf) {
                         let obj = result.viaf[key]
-                        let item = {
-                            title: key,
-                            references: obj.references
-                        }
-                        list.push(item)
-
-                        if (obj.selected) {
-                            selected.push(key)
+                        let viafId = obj.viafId
+                        if (viafs.indexOf(viafId) == -1) {
+                            let item = {
+                                title: key,
+                                references: obj.references,
+                                viafId: viafId,
+                                show: false
+                            }
+                            list.push(item)
+                            viafs.push(viafId)
                         }
                     }
 
