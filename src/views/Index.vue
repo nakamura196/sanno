@@ -3,30 +3,31 @@
         <v-content>
             <v-container>
     
-                <v-btn class="mb-4" color="warning" @click="logout">Logout</v-btn>
+                <v-btn class="mb-4" color="primary" @click="login" v-show="!$isAuthenticated()">Login</v-btn>
+                <v-btn class="mb-4" color="warning" @click="logout" v-show="$isAuthenticated()">Logout</v-btn>
     
-                <v-list two-line class="elevation-1 mb-5">
+                <v-list two-line class="elevation-1 mb-5" v-show="$isAuthenticated()">
                     <template v-for="item in items">
-                        
-                            <v-list-tile
-                        :key="item.title"
-                        avatar
-                        @click="move(item.title)"
-                      >
-                        <v-list-tile-avatar>
-                          <v-icon>person</v-icon>
-                        </v-list-tile-avatar>
-            
-                        <v-list-tile-content>
-                          <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-                        </v-list-tile-content>
-            
-                        <v-list-tile-action v-if="item.selected">
-                          <v-btn icon ripple>
-                            <v-icon>check</v-icon>
-                          </v-btn>
-                        </v-list-tile-action>
-                      </v-list-tile>
+                            
+                                <v-list-tile
+                            :key="item.title"
+                            avatar
+                            @click="move(item.title)"
+                          >
+                            <v-list-tile-avatar>
+                              <v-icon>person</v-icon>
+                            </v-list-tile-avatar>
+                
+                            <v-list-tile-content>
+                              <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                            </v-list-tile-content>
+                
+                            <v-list-tile-action v-if="item.selected">
+                              <v-btn icon ripple>
+                                <v-icon>check</v-icon>
+                              </v-btn>
+                            </v-list-tile-action>
+                          </v-list-tile>
 </template>
                 </v-list>
     
@@ -41,7 +42,6 @@ import axios from 'axios';
 // import the plugin
 import VueGAPI from "vue-gapi";
 
-let separator = "|"
 let spreadsheetId = '12LdWL7-4WVfSGoPuM7Ji-yyJaXcjI3WywXzM7F48PYY'
 let sheetName = "contributeurs_viaf"
 
@@ -64,12 +64,12 @@ export default {
         }
     },
     watch: {
-        '$route' (to, from) {
+        '$route': function() {
             this.search()
         }
     },
     created: function() {
-        this.login()
+        this.init()
     },
     computed: {
         isSignedIn() {
@@ -77,13 +77,13 @@ export default {
         }
     },
     methods: {
-
-        login() {
-            if (this.$isAuthenticated() !== true) {
-                this.$login()
-            } else {
+        init() {
+            if (this.$isAuthenticated() == true) {
                 this.getSelected()
             }
+        },
+        login() {
+            this.$login()
         },
         logout() {
             this.$logout()
@@ -126,13 +126,10 @@ export default {
 
                     const ordered = {};
                     Object.keys(result).sort().forEach(function(key) {
-                    ordered[key] = result[key];
+                        ordered[key] = result[key];
                     });
 
                     for (let key in ordered) {
-
-                        let obj = result[key]
-                        let viaf = obj.viaf
 
                         let selected = this.selected.indexOf(key) != -1 ? true : false
 

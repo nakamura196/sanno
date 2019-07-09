@@ -2,7 +2,7 @@
     <v-app>
         <v-toolbar>
             <v-toolbar-title class="headline">
-                Les réseaux entre les éléments de l'Encyclopédie
+                Un Outil de connexion des ID VIAF aux données ENCRE
             </v-toolbar-title>
             <v-spacer></v-spacer>
             <v-toolbar-items>

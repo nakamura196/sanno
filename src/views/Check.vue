@@ -13,10 +13,10 @@
 </template>
   </v-data-table>
 
-  <h2 class="mt-5 mb-4">Choose appropriate names (Multiple answers allowed)</h2>
+  <h2 class="mt-5 mb-4">Sélectionnez les noms appropriés (réponses multiples autorisées)</h2>
 
-<template v-for="(item, index) in list">
-    <v-card class="px-4 mb-4">
+<template v-for="(item, index2) in list">
+    <v-card class="px-4 mb-4" :key="index2">
     
         <v-card-actions>
             <v-checkbox :key="item.title" v-model="selected" :label="item.title+' ['+item.viafId+']'" :value="item.viafId">
@@ -31,10 +31,10 @@
     
         <v-slide-y-transition>
             <v-card-text class="pb-5" v-show="item.show">
-                <template v-for="(ref, index) in item.references">
+                <div v-for="(ref, index) in item.references" :key="index">
                                         <span>[{{index + 1}}] <a target="_blank" :href="ref">{{ref}}</a></span>
                                         <br/>
-</template>
+</div>
           </v-card-text>
         </v-slide-y-transition>
       </v-card>
@@ -64,7 +64,6 @@ export default {
             headers: [],
             list: [],
             person: "",
-            selected: [],
             result: {},
             selected: [],
             index: -1
@@ -94,9 +93,7 @@ export default {
                             ]
                         }
                     }).then(
-                        response => {
-                            alert("saved.")
-                        }
+                        alert("saved.")
                     ).catch(error => {
                         console.log(error);
                         alert(error.result.error.message)
@@ -152,7 +149,7 @@ export default {
 
                     for (let key in result.enccre) {
                         let item = {
-                            key: key,
+                            key: key.replace("description", "description par ENCCRE"),
                             value: result.enccre[key]
                         }
                         headers.push(key)
