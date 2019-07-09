@@ -4,30 +4,33 @@
             <v-container>
     
                 <v-btn class="mb-4" color="primary" @click="login" v-show="!$isAuthenticated()">Login</v-btn>
-                <v-btn class="mb-4" color="warning" @click="logout" v-show="$isAuthenticated()">Logout</v-btn>
+                <v-btn class="mb-4" color="warning" @click="logout" v-show="$isAuthenticated() && items.length > 0">Logout</v-btn>
+                <v-btn class="mb-4" @click="reload">
+                    <v-icon>refresh</v-icon>
+                </v-btn>
     
-                <v-list two-line class="elevation-1 mb-5" v-show="$isAuthenticated()">
+                <v-list two-line class="elevation-1 mb-5" v-show="items.length > 0">
                     <template v-for="item in items">
+                                        
+                                            <v-list-tile
+                                        :key="item.title"
+                                        avatar
+                                        @click="move(item.title)"
+                                      >
+                                        <v-list-tile-avatar>
+                                          <v-icon>person</v-icon>
+                                        </v-list-tile-avatar>
                             
-                                <v-list-tile
-                            :key="item.title"
-                            avatar
-                            @click="move(item.title)"
-                          >
-                            <v-list-tile-avatar>
-                              <v-icon>person</v-icon>
-                            </v-list-tile-avatar>
-                
-                            <v-list-tile-content>
-                              <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-                            </v-list-tile-content>
-                
-                            <v-list-tile-action v-if="item.selected">
-                              <v-btn icon ripple>
-                                <v-icon>check</v-icon>
-                              </v-btn>
-                            </v-list-tile-action>
-                          </v-list-tile>
+                                        <v-list-tile-content>
+                                          <v-list-tile-title>{{ item.title }}</v-list-tile-title>
+                                        </v-list-tile-content>
+                            
+                                        <v-list-tile-action v-if="item.selected">
+                                          <v-btn icon ripple>
+                                            <v-icon>check</v-icon>
+                                          </v-btn>
+                                        </v-list-tile-action>
+                                      </v-list-tile>
 </template>
                 </v-list>
     
@@ -42,33 +45,37 @@ import axios from 'axios';
 // import the plugin
 import VueGAPI from "vue-gapi";
 
+
 let spreadsheetId = '12LdWL7-4WVfSGoPuM7Ji-yyJaXcjI3WywXzM7F48PYY'
 let sheetName = "contributeurs_viaf"
 
-// create the 'options' object
-const apiConfig = {
-    apiKey: "AIzaSyAqoY4_PBPmknF-1ZSsYYRsBoM8i7ShKHs",
-    clientId: "167625636259-5fmcf63g2sogbdjq7ep397iufqi9cjii.apps.googleusercontent.com",
-    discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
-    scope: "https://www.googleapis.com/auth/spreadsheets"
-};
-
 // Use the plugin and pass along the configuration
-Vue.use(VueGAPI, apiConfig);
+
 
 export default {
     data: function() {
         return {
             items: [],
-            selected: []
-        }
-    },
-    watch: {
-        '$route': function() {
-            this.search()
+            selected: [],
+            apiKey: "",
+            clientId: ""
         }
     },
     created: function() {
+        let param = Object.assign({}, this.$route.query)
+
+        this.apiKey = param["apiKey"]
+        this.clientId = param["clientId"]
+
+        // create the 'options' object
+        const apiConfig = {
+
+            apiKey: this.apiKey,
+            clientId: this.clientId,
+            discoveryDocs: ["https://sheets.googleapis.com/$discovery/rest?version=v4"],
+            scope: "https://www.googleapis.com/auth/spreadsheets"
+        };
+        Vue.use(VueGAPI, apiConfig);
         this.init()
     },
     computed: {
@@ -113,7 +120,10 @@ export default {
                 })
         },
         move(data) {
-            this.$router.push({ path: "check", query: { q: data } })
+            this.$router.push({ path: "check", query: { q: data, apiKey: this.apiKey, clientId: this.clientId } })
+        },
+        reload() {
+            location.reload()
         },
         list() {
 

@@ -4,12 +4,6 @@
             <v-toolbar-title class="headline">
                 Un Outil de connexion des ID VIAF aux données ENCRE
             </v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-toolbar-items>
-                <v-btn flat>
-                    <router-link to="/"><i class="material-icons">home</i></router-link>
-                </v-btn>
-            </v-toolbar-items>
         </v-toolbar>
     
         <v-content>

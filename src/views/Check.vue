@@ -8,8 +8,8 @@
     
                 <v-data-table :headers="headers" :items="items" hide-actions hide-headers class="elevation-1">
                     <template v-slot:items="props">
-                                                      <th>{{ props.item.key }}</th>
-                                                      <td class="py-2">{{ props.item.value }}</td>
+                                                                  <th>{{ props.item.key }}</th>
+                                                                  <td class="py-2">{{ props.item.value }}</td>
 </template>
   </v-data-table>
 
@@ -22,11 +22,11 @@
             <v-checkbox :key="item.title" v-model="selected" :label="item.title+' ['+item.viafId+']'" :value="item.viafId">
             </v-checkbox>
             <template v-if="item.references.length > 0">
-                <v-spacer></v-spacer>
-                <v-btn icon @click="item.show = !item.show">
-                    <v-icon>{{ item.show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
-                </v-btn>
-            </template>
+                            <v-spacer></v-spacer>
+                            <v-btn icon @click="item.show = !item.show">
+                                <v-icon>{{ item.show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
+                            </v-btn>
+</template>
         </v-card-actions>
     
         <v-slide-y-transition>
@@ -41,7 +41,10 @@
 
 </template>
 
-    <v-btn color="primary" class="mb-5" @click="save">Save</v-btn>
+    <v-btn color="primary" class="mb-5" @click="save"><v-icon>save</v-icon></v-btn>
+     <v-btn class="mb-5" @click="back">
+                        <v-icon>home</v-icon>
+                    </v-btn>
                 
             </v-container>
         </v-content>
@@ -66,15 +69,23 @@ export default {
             person: "",
             result: {},
             selected: [],
-            index: -1
+            index: -1,
+            apiKey: "",
+            clientId: ""
         }
     },
     created: function() {
         let param = Object.assign({}, this.$route.query)
+
+        this.apiKey = param["apiKey"]
+        this.clientId = param["clientId"]
         this.person = param.q
         this.getSelected()
     },
     methods: {
+        back() {
+            this.$router.push({ path: "/", query: { apiKey: this.apiKey, clientId: this.clientId } })
+        },
         save() {
 
             let selected = this.selected
@@ -95,7 +106,6 @@ export default {
                     }).then(
                         alert("saved.")
                     ).catch(error => {
-                        console.log(error);
                         alert(error.result.error.message)
                     });
                 })
